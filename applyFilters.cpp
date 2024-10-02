@@ -5,21 +5,16 @@
 #include <cstdint>
 #include <chrono>
 
+#include "include/filter3x3.h"
+#include "include/filter9x9.h"
+#include "include/filter18x18.h"
+
+#include "include/filterHue.h"
+#include "include/filterSaturation.h"
+#include "include/filterValue.h"
+
+
 using namespace std;
-
-// Estructura para almacenar píxeles RGB
-struct Pixel {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-};
-
-// Estructura para almacenar píxeles HSV
-struct HSVPixel {
-    float h; // Hue (0-360)
-    float s; // Saturation (0-1)
-    float v; // Value (0-1)
-};
 
 // Función para cargar los píxeles desde un archivo binario
 bool loadImageFromBinary(const string& inputBinaryFile, int& width, int& height, vector<Pixel>& pixels) {
@@ -58,76 +53,6 @@ bool saveImageToBinary(const string& outputBinaryFile, int width, int height, co
 
     outputFile.close();
     return true;
-}
-
-// Función para aplicar un filtro básico (convolución) con un kernel 3x3
-void applyFilter3x3(vector<Pixel>& channel, int width, int height) {
-    // Ejemplo de filtro 3x3: Media
-    vector<Pixel> temp = channel;
-    int kernel[3][3] = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
-    int kernelSum = 9;
-
-    for (int y = 1; y < height - 1; ++y) {
-        for (int x = 1; x < width - 1; ++x) {
-            int sum = 0;
-            for (int ky = -1; ky <= 1; ++ky) {
-                for (int kx = -1; kx <= 1; ++kx) {
-                    sum += temp[(y + ky) * width + (x + kx)].red * kernel[ky + 1][kx + 1];
-                }
-            }
-            channel[y * width + x].red = sum / kernelSum;
-        }
-    }
-}
-
-// Función para aplicar un filtro más complejo (9x9)
-void applyFilter9x9(vector<Pixel>& channel, int width, int height) {
-    // Filtro 9x9
-    vector<Pixel> temp = channel;
-    int kernelSum = 81;  // Todos los valores son 1
-    int kernel[9][9];
-
-    // Inicializar el kernel con 1
-    for (int i = 0; i < 9; ++i)
-        for (int j = 0; j < 9; ++j)
-            kernel[i][j] = 1;
-
-    for (int y = 4; y < height - 4; ++y) {
-        for (int x = 4; x < width - 4; ++x) {
-            int sum = 0;
-            for (int ky = -4; ky <= 4; ++ky) {
-                for (int kx = -4; kx <= 4; ++kx) {
-                    sum += temp[(y + ky) * width + (x + kx)].green * kernel[ky + 4][kx + 4];
-                }
-            }
-            channel[y * width + x].green = sum / kernelSum;
-        }
-    }
-}
-
-// Función para aplicar un filtro muy complejo (18x18)
-void applyFilter18x18(vector<Pixel>& channel, int width, int height) {
-    // Filtro 18x18
-    vector<Pixel> temp = channel;
-    int kernelSum = 324;  // Todos los valores son 1
-    int kernel[18][18];
-
-    // Inicializar el kernel con 1
-    for (int i = 0; i < 18; ++i)
-        for (int j = 0; j < 18; ++j)
-            kernel[i][j] = 1;
-
-    for (int y = 9; y < height - 9; ++y) {
-        for (int x = 9; x < width - 9; ++x) {
-            int sum = 0;
-            for (int ky = -9; ky <= 9; ++ky) {
-                for (int kx = -9; kx <= 9; ++kx) {
-                    sum += temp[(y + ky) * width + (x + kx)].blue * kernel[ky + 9][kx + 9];
-                }
-            }
-            channel[y * width + x].blue = sum / kernelSum;
-        }
-    }
 }
 
 // Función para convertir un solo pixel de RGB a HSV 
@@ -220,48 +145,6 @@ vector<Pixel> hsvToRgb(const vector<HSVPixel>& hsvPixels, int width, int height)
         rgbPixels[i] = hsvToRgbPixel(hsvPixels[i]);
     }
     return rgbPixels;
-}
-
-// Filtro para el canal Hue (desplazamiento en el espectro de colores)
-void filterHue(vector<float>& hChannel, int width, int height) {
-    for (int i = 0; i < width * height; ++i) {
-        hChannel[i] += 30.0; // Desplazamiento de 30 grados en el círculo de color
-        if (hChannel[i] > 360.0) {
-            hChannel[i] -= 360.0; // Mantener el valor de hue entre 0 y 360
-        }
-    }
-}
-
-// Filtro para el canal Saturation (multiplicación para aumentar la saturación)
-void filterSaturation(vector<float>& sChannel, int width, int height) {
-    for (int i = 0; i < width * height; ++i) {
-        sChannel[i] *= 1.2; // Incrementa la saturación en un 20%
-        if (sChannel[i] > 1.0) {
-            sChannel[i] = 1.0; // Mantener la saturación entre 0 y 1
-        }
-    }
-}
-
-// Filtro para el canal Value (promedio con un desenfoque 3x3)
-void filterValue(vector<float>& vChannel, vector<HSVPixel>& hsvPixels, int width, int height) {
-    vector<float> temp = vChannel; // Copiar el canal V para procesar
-
-    for (int y = 1; y < height - 1; ++y) {
-        for (int x = 1; x < width - 1; ++x) {
-            float sum = 0.0;
-            for (int ky = -1; ky <= 1; ++ky) {
-                for (int kx = -1; kx <= 1; ++kx) {
-                    sum += temp[(y + ky) * width + (x + kx)]; // Sumar los valores de V en el vecindario
-                }
-            }
-            vChannel[y * width + x] = sum / 9.0; // Promedio 3x3
-        }
-    }
-
-    // Actualizar el canal V en hsvPixels después del filtrado
-    for (int i = 0; i < width * height; ++i) {
-        hsvPixels[i].v = vChannel[i];
-    }
 }
 
 
