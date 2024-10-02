@@ -3,6 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <cstdint>
+#include <chrono>
 
 using namespace std;
 
@@ -330,6 +331,8 @@ int main() {
     int width, height;
     vector<Pixel> rgbPixels;
 
+    auto start = chrono::high_resolution_clock::now();
+
     // 1. Leer la imagen RGB desde el archivo binario
     if (!loadImageFromBinary(inputBinaryFile, width, height, rgbPixels)) {
         cerr << "Error al cargar la imagen RGB desde el archivo binario." << endl;
@@ -375,6 +378,10 @@ int main() {
     //10. Transformar la imagen de HSV a RGB de nuevo
     rgbPixels = hsvToRgb(hsvPixels, width, height);
 
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> duration = end -start;
+
     //11. Guardar el resultado final
     if (!saveImageToBinary(outputBinaryFile, width, height, rgbPixels)) {
         cerr << "Error al guardar la imagen procesada en el archivo binario." << endl;
@@ -382,6 +389,10 @@ int main() {
     }
 
     cout << "Imagen procesada y guardada exitosamente en " << outputBinaryFile << endl;
+
+
+
+    cout << endl << endl << "Tiempo de ejecución: " << duration.count() << " segundos" << endl << endl << endl;
 
     return 0;
 }
