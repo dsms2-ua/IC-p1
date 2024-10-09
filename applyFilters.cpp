@@ -270,9 +270,7 @@ int main() {
         cerr << "Error al guardar la imagen procesada en el archivo binario." << endl;
         return -1;
     }
-
     cout << "Imagen procesada y guardada exitosamente en " << outputBinaryFile << endl;
-
 
 
     cout << endl << endl << "Tiempo de ejecución: " << duration.count() << " segundos" << endl << endl << endl;
