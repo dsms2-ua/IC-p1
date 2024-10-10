@@ -50,12 +50,6 @@ bool readImageAndSaveAsBinary(const string& imagePath, const string& outputBinar
 }
 
 int main(int argc, char* argv[]) {
-    if(argc != 2){
-        cout << "Bad program usage: ./readImage imagePath.jpg" << endl;
-        return -1;
-    }
-
-
     string imagePath = argv[1];          // Ruta de la imagen PNG
     string outputBinaryFile = "bin/input.bin";  // Archivo binario donde se guardarán los datos
 
