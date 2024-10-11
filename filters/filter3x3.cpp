@@ -3,7 +3,7 @@
 void applyFilter3x3(vector<Pixel>& channel, int width, int height) {
     // Ejemplo de filtro 3x3: Media
     vector<Pixel> temp = channel;
-    int kernel[3][3] = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    int kernel[3][3] = {{0, 0, 0}, {-1, 1, 0}, {0, 0, 0}};
     int kernelSum = 9;
 
     for (int y = 1; y < height - 1; ++y) {
